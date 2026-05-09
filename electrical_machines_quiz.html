@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แบบทดสอบ Electrical Machines</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1e2530;
+    --border: #30363d;
+    --accent: #f7c948;
+    --accent2: #58a6ff;
+    --correct: #3fb950;
+    --wrong: #f85149;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Sarabun', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    width: 100%;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-title { font-size: 1rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
+  .header-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+  .score-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    text-align: right;
+  }
+  .progress-wrap { width: 100%; max-width: 760px; padding: 12px 24px 0; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 6px; }
+  .progress-bar { width: 100%; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--accent); border-radius: 99px; transition: width 0.4s ease; }
+  main { width: 100%; max-width: 760px; padding: 20px 24px 40px; flex: 1; }
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .q-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .q-text { font-size: 1.03rem; font-weight: 600; line-height: 1.75; color: var(--text); margin-bottom: 20px; }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option-btn {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    transition: all 0.15s ease;
+    width: 100%;
+  }
+  .option-btn:hover:not(:disabled) { border-color: var(--accent); background: #f7c94810; }
+  .option-btn:disabled { cursor: default; }
+  .opt-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    min-width: 20px;
+    padding-top: 2px;
+  }
+  .opt-text { line-height: 1.6; flex: 1; }
+  .option-btn.selected { border-color: var(--accent2); background: #58a6ff18; }
+  .option-btn.correct { border-color: var(--correct); background: #3fb95018; }
+  .option-btn.correct .opt-label { color: var(--correct); }
+  .option-btn.wrong { border-color: var(--wrong); background: #f8514918; }
+  .option-btn.wrong .opt-label { color: var(--wrong); }
+  .result-banner {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: var(--radius);
+    font-size: 0.92rem;
+    font-weight: 600;
+    display: none;
+  }
+  .result-banner.show { display: block; }
+  .result-banner.correct-banner { background: #3fb95018; border: 1px solid var(--correct); color: var(--correct); }
+  .result-banner.wrong-banner { background: #f8514918; border: 1px solid var(--wrong); color: #ff8a85; }
+  .result-banner .ans-text { margin-top: 6px; font-size: 0.85rem; font-weight: 400; color: var(--text-muted); line-height: 1.6; }
+  .controls { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+  .btn {
+    padding: 10px 22px;
+    border-radius: var(--radius);
+    border: none;
+    font-family: 'Sarabun', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--accent); color: #0d1117; }
+  .btn-primary:hover { background: #f5d070; }
+  .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn:disabled { opacity: 0.35; cursor: default; }
+  /* Jump Panel */
+  .jump-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 20px;
+  }
+  .jump-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 12px; }
+  .jump-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .jump-btn {
+    width: 46px;
+    height: 36px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    cursor: pointer;
+    transition: all 0.12s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .jump-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .jump-btn.current { background: var(--accent); color: #0d1117; border-color: var(--accent); font-weight: 700; }
+  .jump-btn.answered-correct { background: #3fb95025; border-color: var(--correct); color: var(--correct); }
+  .jump-btn.answered-wrong { background: #f8514925; border-color: var(--wrong); color: var(--wrong); }
+  .jump-btn.skipped { background: #8b949e20; border-color: var(--text-muted); color: var(--text-muted); }
+  .quick-jump { display: flex; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .quick-jump label { font-size: 0.82rem; color: var(--text-muted); }
+  .quick-jump input {
+    width: 70px;
+    padding: 7px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.88rem;
+  }
+  .quick-jump input:focus { outline: none; border-color: var(--accent); }
+  /* Final screen */
+  #final-screen { display: none; text-align: center; padding: 40px 0; }
+  .final-icon { font-size: 4rem; margin-bottom: 12px; }
+  .final-score { font-family: 'IBM Plex Mono', monospace; font-size: 3.5rem; font-weight: 700; color: var(--accent); }
+  .final-label { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 28px; margin-top: 4px; }
+  .stat-row { display: flex; justify-content: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+  .stat-box { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 22px; min-width: 100px; }
+  .stat-val { font-family: 'IBM Plex Mono', monospace; font-size: 1.8rem; font-weight: 700; }
+  .stat-val.green { color: var(--correct); }
+  .stat-val.red { color: var(--wrong); }
+  .stat-desc { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+  .leg { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 2px; }
+  @media (max-width: 600px) {
+    header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .q-text { font-size: 0.95rem; }
+    .btn { padding: 9px 14px; font-size: 0.88rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="header-title">⚡ Electrical Machines Quiz</div>
+    <div class="header-sub">เฉพาะข้อที่ไฮไลน์ · สภาวิศวกร</div>
+  </div>
+  <div class="score-badge">
+    <div id="header-score">0 / 0</div>
+    <div style="font-size:0.7rem;color:var(--text-muted);margin-top:2px" id="header-pct">คะแนน —%</div>
+  </div>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-info">
+    <span id="prog-label">ข้อที่ 1 / 83</span>
+    <span id="prog-remain">ยังไม่ตอบ 83 ข้อ</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<main>
+  <div class="jump-section" id="jump-section">
+    <div class="jump-title">📋 ข้ามข้อ / เลือกข้อ</div>
+    <div class="quick-jump">
+      <label>ลำดับที่</label>
+      <input type="number" id="jump-input" min="1" max="83" placeholder="1–83">
+      <button class="btn btn-secondary" style="padding:7px 14px;font-size:0.85rem" onclick="jumpToInput()">ไป</button>
+    </div>
+    <div class="legend">
+      <span class="leg"><span class="leg-dot" style="background:#f7c948"></span>กำลังทำ</span>
+      <span class="leg"><span class="leg-dot" style="background:#3fb950"></span>ถูก</span>
+      <span class="leg"><span class="leg-dot" style="background:#f85149"></span>ผิด</span>
+      <span class="leg"><span class="leg-dot" style="background:#8b949e"></span>ข้าม</span>
+      <span class="leg"><span class="leg-dot" style="background:#1e2530;border:1px solid #30363d"></span>ยังไม่ตอบ</span>
+    </div>
+    <div class="jump-grid" id="jump-grid"></div>
+  </div>
+
+  <div id="quiz-area">
+    <div class="q-card">
+      <div class="q-num" id="q-num"></div>
+      <div class="q-text" id="q-text"></div>
+      <div class="options" id="options"></div>
+      <div class="result-banner" id="result-banner">
+        <span id="result-icon"></span> <span id="result-msg"></span>
+        <div class="ans-text" id="result-ans"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn btn-secondary" id="btn-prev" onclick="prevQ()">◀ ก่อนหน้า</button>
+      <button class="btn btn-secondary" id="btn-skip" onclick="skipQ()">⏭ ข้ามข้อนี้</button>
+      <button class="btn btn-primary" id="btn-next" onclick="nextQ()" disabled>ถัดไป ▶</button>
+      <button class="btn btn-secondary" onclick="toggleJump()">☰ รายการ</button>
+    </div>
+  </div>
+
+  <div id="final-screen">
+    <div class="final-icon">🏆</div>
+    <div class="final-score" id="final-score-val">0%</div>
+    <div class="final-label" id="final-score-label">คะแนนรวม</div>
+    <div class="stat-row">
+      <div class="stat-box"><div class="stat-val green" id="stat-correct">0</div><div class="stat-desc">✅ ถูกต้อง</div></div>
+      <div class="stat-box"><div class="stat-val red" id="stat-wrong">0</div><div class="stat-desc">❌ ผิด</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--text-muted)" id="stat-skip">0</div><div class="stat-desc">⏭ ข้าม</div></div>
+    </div>
+    <button class="btn btn-primary" onclick="restartQuiz()">🔄 เริ่มใหม่</button>
+    <button class="btn btn-secondary" style="margin-left:10px;margin-top:8px" onclick="reviewQuiz()">📖 ทบทวนคำตอบ</button>
+  </div>
+</main>
+
+<script>
+const QUESTIONS = [
+  { id:221, text:"การต่อขนานเครื่องกำเนิดไฟฟ้าซิงโครนัสสามเฟสกับระบบไฟฟ้า (synchronization) ข้อใดกล่าวไม่ถูกต้อง", opts:["การตรวจสอบแบบ Three-dark ถ้าหลอดไฟดับสนิทหั้งสามดวงโดยไม่มีการเปลี่ยนแปลงแสดงว่าสามารถทำการขนานเครื่องจักรกับระบบไฟฟ้าได้","การตรวจสอบแบบ Three-dark ถ้าหลอดไฟมีลักษณะ สว่าง-ดับ พร้อมกันทั้งสามดวงตลอดเวลา แสดงว่าความถี่เท่ากันแต่ลำดับเฟสไม่ตรงกัน","การตรวจสอบแบบ One-dark Two-bright ถ้าหลอดไฟมีลักษณะดับ 1 ดวงและสว่าง 2 ดวง สลับกันไปตลอดเวลาแสดงว่าลำดับเฟสตรงกันแต่ความถี่ไม่เท่ากัน","การขนานเครื่องจักรกับระบบไฟฟ้า ลำดับเฟสต้องเหมือนกัน ความถี่ต้องเท่ากัน และแรงดันไฟฟ้าต้องเท่ากัน"], ans:3 },
+  { id:222, text:"ตัวเลือกใดเป็นส่วนที่อยู่ในมอเตอร์เหนี่ยวนำ (induction motor)", opts:["อินเตอร์โพล (inter pole)","ขดลวดซดเชย (compensating winding)","โรเตอร์แบบกรงกระรอก (squirrel cage rotor)","ซีคอมมิวเตเตอร์ (commutator)"], ans:3 },
+  { id:223, text:"เมื่อต้องการใช้เครื่องกำเนิดไฟฟ้าแบบซิงโครนัส (synchronous generator) ผลิตไฟฟ้า โดยต้นกำลังเป็นพลังงานน้ำจากเขื่อน ควรเลือกใช้โรเตอร์ที่เหมาะสมคือ", opts:["โรเตอร์แบบทรงกระบอก (cylindrical rotor)","โรเตอร์แบบชั่วยืน (salient pole rotor)","โรเตอร์แบบพันขดลวด (wound rotor)","โรเตอร์แบบกรงกระรอก (squirrel cage rotor)"], ans:2 },
+  { id:224, text:"มอเตอร์ที่ใช้ไฟฟ้ากระแสสลับในข้อใดที่ไม่เกิดสนามแม่เหล็กหมุนจากขดลวดสเตเตอร์", opts:["มอเตอร์เหนี่ยวนำ (induction motor)","มอเตอร์ซิงโครนัส (synchronous motor)","มอเตอร์รีลักแทนซ์ (reluctance motor)","มอเตอร์ยูนิเวอร์แซล (universal motor)"], ans:4 },
+  { id:225, text:"มอเตอร์เหนี่ยวนำหนึ่งเฟสในข้อใดให้แรงบิดเริ่มต้นหมุน (starting torque) สูงสุด", opts:["Split phase motor","Capacitor start motor","Permanent split capacitor motor","Shaded pole motor"], ans:2 },
+  { id:226, text:"ข้อใดเป็นส่วนประกอบของเครื่องจักรกลไฟฟ้าเหนี่ยวนำ (induction machine)", opts:["โรเตอร์แบบพันขดลวด (wound rotor) และ สเตเตอร์ (stator)","ขดลวดสร้างสนามแม่เหล็ก (field winding) และ โรเตอร์ (rotor)","ขดลวดสร้างสนามแม่เหล็ก (field winding) และ ขดลวดอาร์เมเจอร์ (armature winding)","ขดลวดสร้างสนามแม่เหล็ก (field winding) และ โรเตอร์แบบกรงกระรอก (squirrel cage rotor)"], ans:1 },
+  { id:227, text:"ซิงโครนัสรีแอคแทนซ์ (synchronous reactance) เกิดจากสนามแม่เหล็กส่วนใดของเครื่องจักรกลไฟฟ้าซิงโครนัส", opts:["สนามแม่เหล็กอาร์เมเจอร์กับสนามแม่เหล็กรั่ว","สนามแม่เหล็กอาร์เมเจอร์กับสนามแม่เหล็กของขั้วแม่เหล็ก","สนามแม่เหล็กรั่วกับสนามแม่เหล็กของขั้วแม่เหล็ก","สนามแม่เหล็กรวมทั้งหมดของเครื่องจักรกลไฟฟ้าซิงโครนัส"], ans:1 },
+  { id:228, text:"ข้อใดไม่ใช่หน้าที่ของขดลวดสเตเตอร์ของเครื่องจักรกลไฟฟ้ากระแสสลับ (AC machine)", opts:["สร้างสนามแม่เหล็กหมุน (rotating magnetic field)","ส่งกำลังทางกลออกกรณีทำงานเป็นมอเตอร์","ส่งกำลังไฟฟ้าออกกรณีทำงานเป็นเครื่องกำเนิดไฟฟ้า","รับกำลังไฟฟ้าเข้ากรณีทำงานเป็นมอเตอร์"], ans:2 },
+  { id:229, text:"ข้อใดเป็นส่วนที่มีการเคลื่อนที่ในการทำงานของเครื่องกำเนิดไฟฟ้ากระแสสลับ (AC machine)", opts:["เปลือกและโครง (machine frame)","ขั้วแม่เหล็ก (magnetic pole)","แปลงถ่านและแบริ่ง (brush and bearing)","แกนเหล็กอาร์เมเจอร์ (armature core)"], ans:2 },
+  { id:231, text:"หน้าที่หลักของ Damper bar ในเครื่องจักรกลไฟฟ้าคือข้อใด", opts:["ลดการแกว่งตัวของโรเตอร์ของเครื่องจักรกลไฟฟ้าซิงโครนัส","ลดการแกว่งตัวของโรเตอร์ของเครื่องจักรกลไฟฟ้ากระแสตรง","ลดการเปลี่ยนแปลงกระแสไฟฟ้าในขดลวดอาร์มาเจอร์ของเครื่องจักรกลไฟฟ้าซิงโครนัส","ลดการเปลี่ยนแปลงกระแสไฟฟ้าในขดลวดอาร์มาเจอร์ของเครื่องจักรกลไฟฟ้ากระแสตรง"], ans:1 },
+  { id:232, text:"เครื่องจักรกลไฟฟ้าประเภทใดต้องการกระแสไฟฟ้ากระตุ้นจากแหล่งจ่ายแรงดันไฟฟ้ากระแสตรงภายนอก", opts:["เครื่องกำเนิดไฟฟ้าเหนี่ยวนำ (induction generator)","มอเตอร์ซิงโครนัส (synchronous motor)","มอเตอร์รีลักแทนซ์ (reluctance motor)","มอเตอร์เหนี่ยวนำ (induction motor)"], ans:2 },
+  { id:233, text:"ทิศทางแรงเคลื่อนไฟฟ้าเหนี่ยวนำ (induced emf) ในลวดตัวนำของเครื่องจักรกลไฟฟ้าสามารถเปลี่ยนแปลงได้โดยวิธีใด", opts:["ลดขนาดลวดตัวนำ","กลับทิศทางสนามแม่เหล็ก","เพิ่มความยาวลวดตัวนำ","เพิ่มขนาดสนามแม่เหล็ก"], ans:2 },
+  { id:235, text:"แรงเคลื่อนไฟฟ้าเหนี่ยวนำสูงสุด (maximum induced emf) ในลวดตัวนำเดียวภายในสนามแม่เหล็กจะเกิดขึ้นเมื่อขดลวดวางอยู่ในลักษณะใด", opts:["ตั้งฉากกับทิศทางสนามแม่เหล็ก","ขนานกับทิศทางสนามแม่เหล็ก","ทำมุม 30° กับทิศทางสนามแม่เหล็ก","ทำมุม 45° กับทิศทางสนามแม่เหล็ก"], ans:1 },
+  { id:237, text:"จากรูปวงจรสมมูลซิงโครนัส ข้อใดกล่าวไม่ถูกต้อง (โรเตอร์ 2 ชุดตรงข้าม มี N-S ลักษณะ Cylindrical rotor)", opts:["เป็นโครงสร้างของเครื่องจักรกลไฟฟ้าซิงโครนัส","เครื่องจักรกลไฟฟ้านี้มี 4 poles","โรเตอร์เป็นแบบชั่วยืน (salient pole rotor)","โรเตอร์เป็นแบบทรงกระบอก (cylindrical rotor)"], ans:4 },
+  { id:241, text:"ข้อใดไม่ใช่ลักษณะของโรเตอร์ในเครื่องจักรกลไฟฟ้ากระแสสลับ (AC machines)", opts:["โรเตอร์แบบทรงกระบอก (cylindrical rotor)","โรเตอร์แบบชั่วยืน (salient pole rotor)","โรเตอร์แบบพันขดลวด (wound rotor)","ไม่มีคำตอบที่ถูกต้อง"], ans:4 },
+  { id:242, text:"ในการออกแบบเครื่องกำเนิดไฟฟ้ากระแสสลับ หากต้องการให้แรงดันไฟฟ้าที่ผลิตได้เพิ่มขึ้น 2 เท่า โดยที่ต้นกำลัง (prime mover) คงกำลังและความเร็วรอบเท่าเดิม สามารถทำได้โดย", opts:["เพิ่มขนาดลวดตัวนำในเครื่องกำเนิดไฟฟ้าขึ้น 2 เท่า","ลดขนาดลวดตัวนำของขดลวดอาร์มาเจอร์ลง 2 เท่า","เพิ่มจำนวนรอบของขดลวดอาร์มาเจอร์ในเครื่องกำเนิดไฟฟ้าขึ้น 2 เท่า","ลดจำนวนรอบของขดลวดอาร์มาเจอร์ในเครื่องกำเนิดไฟฟ้าลง 2 เท่า"], ans:3 },
+  { id:243, text:"ข้อใดคือส่วนประกอบที่มีอยู่ในเครื่องจักรกลไฟฟ้ากระแสสลับ แต่ไม่ได้อยู่ในเครื่องจักรกลไฟฟ้ากระแสตรง", opts:["ขดลวดอาร์เมเจอร์ (armature winding)","ขดลวดสร้างสนามแม่เหล็ก (field winding)","วงแหวนลื่น (slip ring)","แปรงถ่าน (brush)"], ans:3 },
+  { id:244, text:"เครื่องจักรกลไฟฟ้าเหนี่ยวนำ 3 เฟส ขณะทำงานมีค่า slip เป็นลบ เครื่องจักรกลไฟฟ้านี้กำลังทำงานอยู่ในสภาวะใด", opts:["สภาวะมอเตอร์","สภาวะเครื่องกำเนิดไฟฟ้า","สภาวะปลั๊กกิ้ง","สภาวะกลับทางหมุน"], ans:2 },
+  { id:253, text:"อัตราส่วนระหว่างกำลังไฟฟ้าที่จ่ายให้โรเตอร์ (power transfer across air gap) กับกำลังไฟฟ้าที่ออกจากโรเตอร์ (electromagnetic power) ตรงกับตัวเลือกใด", opts:["1/(1-s)","1-s","s","1/s"], ans:1 },
+  { id:257, text:"เครื่องจักรกลไฟฟ้าเหนี่ยวนำ 3 เฟส พิกัด 10 HP, 380 V, 4 poles, 50 Hz ขณะมีความเร็ว 1800 rpm เครื่องจักรกลไฟฟ้านี้กำลังทำงานอยู่ในสภาวะใด", opts:["สภาวะมอเตอร์","สภาวะเครื่องกำเนิดไฟฟ้า","สภาวะปลั๊กกิ้ง","สภาวะกลับทางหมุน"], ans:2 },
+  { id:260, text:"แนวทางในข้อใดไม่ใช่วิธีการที่สามารถนำมาใช้ในการควบคุมความเร็วมอเตอร์เหนี่ยวนำสามเฟส", opts:["การเปลี่ยนจำนวนขั้วแม่เหล็กของมอเตอร์","ปรับเปลี่ยนความถี่แหล่งจ่ายไฟฟ้า","ปรับค่าแรงดันไฟฟ้าที่จ่ายให้กับมอเตอร์","การต่อความต้านทานภายนอกอนุกรมกับโรเตอร์แบบกรงกระรอก"], ans:4 },
+  { id:268, text:"สำหรับมอเตอร์เหนี่ยวนำสามเฟส เมื่อค่าสลิปมีค่าเป็น 1 มอเตอร์มีสภาวะเป็นอย่างไร", opts:["หมุนด้วยความเร็วซิงโครนัส","จะเริ่มหมุนกลับทาง","หยุดหมุน","หมุนด้วยความเร็วครึ่งหนึ่งของความเร็วซิงโครนัส"], ans:3 },
+  { id:279, text:"วงจรสมมูลต่อเฟสของเครื่องจักรกลไฟฟ้า (มี R1,X1,Xm,R2,X2 และ (1-s)/s·R2) เป็นคุณลักษณะของเครื่องจักรกลไฟฟ้าประเภทใด", opts:["มอเตอร์เหนี่ยวนำ 3 เฟส","เครื่องกำเนิดไฟฟ้าเหนี่ยวนำ 3 เฟส","เครื่องกำเนิดไฟฟ้าซิงโครนัส 3 เฟส","มอเตอร์ซิงโครนัส 3 เฟส"], ans:1 },
+  { id:283, text:"ข้อใดไม่ใช่ลักษณะของมอเตอร์เหนี่ยวนำสามเฟส", opts:["สามารถควบคุมความเร็วโรเตอร์ได้","ขณะรับโหลดจะทำงานที่ตัวประกอบกำลังไฟฟ้าล้าหลัง (lagging power factor)","กระแสไฟฟ้าขณะเริ่มหมุนมีค่าสูง","ความเร็วโรเตอร์ของมอเตอร์เท่ากับความเร็วซิงโครนัส"], ans:4 },
+  { id:284, text:"ถ้ามอเตอร์เหนี่ยวนำสามเฟสรับโหลดมากเกินกว่าค่าแรงบิดสูงสุด (maximum torque) มอเตอร์เหนี่ยวนำจะเป็นอย่างไร", opts:["หมุนที่ความเร็วพิกัด","หมุนกลับทิศ","หมุนที่ความเร็วสูงกว่าความเร็วพิกัด","หยุดหมุน"], ans:4 },
+  { id:295, text:"เครื่องกำเนิดไฟฟ้า 3 เฟส แบบซิงโครนัส ทำงานอย่างอิสระโดยมีความเร็วคงที่ แรงดันไฟฟ้าที่ขั้ว (terminal voltage) จะเป็นอย่างไร ถ้าภาระทางไฟฟ้าที่มาต่อเป็น ตัวต้านทาน และ ตัวเหนี่ยวนำ ตามลำดับ", opts:["เท่าเดิม, เพิ่มขึ้น","เพิ่มขึ้น, เพิ่มขึ้น","ลดลง, เพิ่มขึ้น","ลดลง, ลดลง"], ans:4 },
+  { id:296, text:"ค่ากำลังไฟฟ้าส่งผ่านจากเครื่องกำเนิดไฟฟ้าซิงโครนัสเข้าสู่ระบบไฟฟ้าจะมีค่าสูงสุดเมื่อมุมระหว่างแรงดันไฟฟ้าทั้งสองมีค่าเท่ากับเท่าใด", opts:["0 electrical degree","90 electrical degree","30 electrical degree","60 electrical degree"], ans:2 },
+  { id:297, text:"ใน V-curve ของมอเตอร์ซิงโครนัส จุดที่เส้นกราฟมีค่ากระแสอาร์มาเจอร์ (armature current) ต่ำที่สุด แสดงถึงอะไร", opts:["ค่าตัวประกอบกำลังไฟฟ้าเท่ากับหนึ่ง (PF = 1)","ไม่มีภาระโหลด","ค่าตัวประกอบกำลังไฟฟ้าล้าหลัง","ค่าตัวประกอบกำลังไฟฟ้านำหน้า"], ans:1 },
+  { id:299, text:"ข้อใดไม่ใช่เงื่อนไขในการขนานเครื่องกำเนิดไฟฟ้าซิงโครนัสเข้ากับระบบไฟฟ้า (synchronization)", opts:["มีแรงดันไฟฟ้าเท่ากัน","มีความถี่เท่ากัน","มีลำดับเฟสเหมือนกัน","มีกระแสไฟฟ้าเท่ากัน"], ans:4 },
+  { id:300, text:"Short circuit ratio (SCR) คือค่าตัวเลขที่เป็นค่าคงที่ของเครื่องจักรกลซิงโครนัส ข้อใดเป็นความหมายของ Short circuit ratio", opts:["อัตราส่วนของกระแสอาร์มาเจอร์เต็มพิกัดต่อกระแสอาร์มาเจอร์สูงสุดที่ขึ้นได้ขณะลัดวงจร","อัตราส่วนของกระแสไฟตรงที่ป้อนเข้าสนามแม่เหล็กเพื่อผลิตแรงดันเต็มพิกัดขณะไม่จ่ายโหลด ต่อกระแสไฟตรงที่ป้อนเข้าสนามแม่เหล็กขณะกระแสอาร์มาเจอร์เต็มพิกัดขณะลัดวงจร","ส่วนกลับของค่า per unit ของ ซิงโครนัสรีแอคแดนช์อิ่มตัว","ไม่มีคำตอบที่ถูกต้อง"], ans:2 },
+  { id:301, text:"วงจรสมมูลต่อเฟสของเครื่องจักรกลไฟฟ้า (Eafg → jXs → Ra → Vta กระแสไหลออก) เป็นคุณลักษณะของเครื่องจักรกลไฟฟ้าประเภทใด", opts:["มอเตอร์ซิงโครนัส","เครื่องกำเนิดไฟฟ้าซิงโครนัส","มอเตอร์เหนี่ยวนำ","เครื่องกำเนิดไฟฟ้าเหนี่ยวนำ"], ans:2 },
+  { id:302, text:"วงจรสมมูลต่อเฟสของเครื่องจักรกลไฟฟ้า (Eafm → jXs → Ra → Vta กระแสไหลเข้า) เป็นคุณลักษณะของเครื่องจักรกลไฟฟ้าประเภทใด", opts:["มอเตอร์ซิงโครนัส","เครื่องกำเนิดไฟฟ้าซิงโครนัส","มอเตอร์เหนี่ยวนำ","เครื่องกำเนิดไฟฟ้าเหนี่ยวนำ"], ans:1 },
+  { id:303, text:"เฟสเซอร์ไดอะแกรมของเครื่องจักรกลซิงโครนัส (Eafg อยู่นำหน้า Vta, Ia ล้าหลัง Vta — Gen lagging load) เป็นคุณลักษณะของเครื่องจักรกลซิงโครนัสแบบใด", opts:["ขณะทำงานเป็นมอเตอร์โดยทำงานที่ PF นำหน้า","ขณะทำงานเป็นมอเตอร์โดยทำงานที่ PF เท่ากับ 1","ขณะทำงานเป็นเครื่องกำเนิดไฟฟ้าโดยทำงานที่ PF นำหน้า","ขณะทำงานเป็นเครื่องกำเนิดไฟฟ้าโดยทำงานที่ PF เท่ากับ 1"], ans:4 },
+  { id:304, text:"ข้อใดไม่ใช่คุณสมบัติของเครื่องจักรกลไฟฟ้าซิงโครนัส (synchronous machines)", opts:["ความเร็วรอบของโรเตอร์มีค่าคงที่ ขณะทำงานที่สภาวะคงตัว (steady state)","ความเร็วรอบของโรเตอร์มีค่าเท่ากับความเร็วซิงโครนัส ขณะทำงานที่สภาวะคงตัว","ความถี่สลิปจะเกิดขึ้นที่ขดลวดโรเตอร์ของมอเตอร์ซิงโครนัสเสมอ ขณะทำงานที่สภาวะคงตัว","สามารถใช้เครื่องจักรกลไฟฟ้าซิงโครนัสช่วยในการปรับปรุงตัวประกอบกำลังไฟฟ้าในระบบได้"], ans:3 },
+  { id:305, text:"จากการทดสอบเครื่องจักรกลไฟฟ้าซิงโครนัส โดยจ่ายพลังงานกลให้เครื่องจักรหมุนด้วยความเร็วซิงโครนัส ส่วนขดลวดอาร์มาเจอร์ต่อวงจรเปิด จากนั้นปรับกระแสสนามแม่เหล็ก (field current) ให้เพิ่มขึ้นจนถึงพิกัด วิธีการนี้เป็นการทดสอบแบบใด", opts:["การทดสอบแบบเปิดวงจร (open circuit test)","การทดสอบแบบลัดวงจร (short circuit test)","การทดสอบหาความสูญเสียเนื่องจากการหมุน (friction and windage losses test)","การทดสอบสลิป (slip test)"], ans:1 },
+  { id:306, text:"ข้อใดไม่ใช่การทดสอบเพื่อหาค่าพารามิเตอร์ในวงจรสมมูลของเครื่องจักรกลซิงโครนัส", opts:["การทดสอบแบบเปิดวงจร (open circuit test)","การทดสอบแบบลัดวงจร (short circuit test)","การทดสอบแบบยึดโรเตอร์ (locked rotor test)","การทดสอบสลิป (slip test)"], ans:3 },
+  { id:307, text:"ข้อใดไม่ใช่เครื่องมือที่จำเป็นต้องใช้ในการขนานเครื่องกำเนิดไฟฟ้าซิงโครนัส (synchronization)", opts:["หลอด Incandescent 3 ดวง","Voltmeter","Frequency meter","Ohmmeter"], ans:4 },
+  { id:308, text:"ข้อใดต่อไปนี้กล่าวถูกต้องที่สุด", opts:["ค่ามุมกำลัง (power angle) ที่มากที่สุดของเครื่องจักรกลไฟฟ้าซิงโครนัสแบบขั้วยืนในทางปฏิบัติคือ 90 องศา","ค่ามุมกำลังที่มากที่สุดของเครื่องจักรกลไฟฟ้าซิงโครนัสแบบขั้วยืนในทางปฏิบัติน้อยกว่า 90 องศา","การทำ Short-circuit test และ Open-circuit test สำหรับเครื่องกำเนิดไฟฟ้าซิงโครนัส สามารถนำไปสู่การหา Unsaturated synchronous reactance ได้เท่านั้น","การทดสอบสลิป (slip test) ในเครื่องจักรกลไฟฟ้าซิงโครนัสแบบขั้วยืน สามารถใช้หา xd ได้เท่านั้น"], ans:2 },
+  { id:315, text:"เมื่อทำการ Synchronization เครื่องกำเนิดไฟฟ้าซิงโครนัสกับ Infinite bus แล้ว ถ้ามีการเปลี่ยนแปลงกำลังของชุดขับเคลื่อนต้นกำลัง (prime mover) จะทำให้เกิดผลในข้อใด", opts:["จ่ายกำลังไฟฟ้าให้ Infinite bus เพิ่มขึ้น เมื่อเพิ่มกำลัง Prime mover","จ่ายกำลังไฟฟ้าให้ Infinite bus ลดลง เมื่อเพิ่มกำลัง Prime mover","ตัวประกอบกำลังไฟฟ้าเพิ่มขึ้น เมื่อเพิ่มกำลัง Prime mover","ตัวประกอบกำลังไฟฟ้าลดลง เมื่อลดกำลัง Prime mover"], ans:1 },
+  { id:316, text:"เครื่องกำเนิดไฟฟ้า 3 เฟส แบบซิงโครนัส ทำงานอย่างอิสระโดยมีความเร็วคงที่ แรงดันไฟฟ้าที่ขั้ว (terminal voltage) จะเป็นอย่างไร ถ้าภาระทางไฟฟ้าที่มาต่อเป็น ตัวต้านทาน และ ตัวเก็บประจุ ตามลำดับ", opts:["เท่าเดิม, เพิ่มขึ้น","เพิ่มขึ้น, เพิ่มขึ้น","ลดลง, เพิ่มขึ้น","ลดลง, ลดลง"], ans:3 },
+  { id:317, text:"มอเตอร์ซิงโครนัสมีความเร็วเป็นอย่างไร", opts:["ช้ากว่า Synchronous speed","เท่ากับ Synchronous speed","เร็วกว่า Synchronous speed","มี Slip speed เหมือนกับ Induction motor"], ans:2 },
+  { id:322, text:"ข้อความใดไม่เกี่ยวข้องกับลักษณะและการทำงานของเครื่องจักรกลไฟฟ้าซิงโครนัส", opts:["Slip speed","Synchronous speed","Synchronize","Phase sequence voltage"], ans:1 },
+  { id:331, text:"เฟสเซอร์ไดอะแกรมของเครื่องจักรกลซิงโครนัส (Ia นำหน้า Vta — Motor leading PF) เป็นคุณลักษณะของเครื่องจักรกลซิงโครนัสแบบใด", opts:["ขณะทำงานเป็นมอเตอร์โดยทำงานที่ตัวประกอบกำลังไฟฟ้านำหน้า","ขณะทำงานเป็นมอเตอร์โดยทำงานที่ตัวประกอบกำลังไฟฟ้าล้าหลัง","ขณะทำงานเป็นเครื่องกำเนิดไฟฟ้าโดยทำงานที่ตัวประกอบกำลังไฟฟ้านำหน้า","ขณะทำงานเป็นเครื่องกำเนิดไฟฟ้าโดยทำงานที่ตัวประกอบกำลังไฟฟ้าล้าหลัง"], ans:1 },
+  { id:333, text:"จากการทดสอบลำดับเฟสสำหรับขนานซิงโครนัส ถ้าลำดับเฟสของเครื่องกำเนิดไฟฟ้าตรงกับระบบไฟฟ้า หลอดไฟแต่ละเฟสจะมีลักษณะอย่างไร", opts:["หลอดไฟดับสนิทหั้งสามเฟส","หลอดไฟเฟส A ดับสนิท ส่วนเฟส B และ C สว่าง","หลอดไฟสว่างทั้งสามเฟส","หลอดไฟเฟส A สว่าง ส่วนเฟส B และ C ดับสนิท"], ans:1 },
+  { id:336, text:"วิธีการเริ่มหมุน (starting method) แบบใด เหมาะสมที่จะนำมาใช้กับมอเตอร์เหนี่ยวนำสามเฟสที่มีขนาด 750 W มากที่สุด", opts:["Direct on line","Auto-transformer starting","Part winding starting","Star-delta starting"], ans:1 },
+  { id:337, text:"การสตาร์ทมอเตอร์เหนี่ยวนำสามเฟส แบบ Direct on line กระแสขณะสตาร์ทมีค่าประมาณเท่าใด", opts:["ลดลงจากกระแสพิกัดประมาณ 2 เท่า","เพิ่มขึ้นจากกระแสพิกัดประมาณ 1-2 เท่า","เพิ่มขึ้นจากกระแสพิกัดประมาณ 5-8 เท่า","เท่ากับกระแสพิกัด"], ans:3 },
+  { id:338, text:"ตัวเลือกใด กล่าวไม่ถูกต้องเกี่ยวกับวิธีการเริ่มสตาร์ทมอเตอร์เหนี่ยวนำแบบสตาร์-เดลต้า", opts:["แรงบิดขณะสตาร์ทมีค่าลดลงจากแรงบิดที่พิกัดประมาณ 3 เท่า","การสตาร์ทแบบนี้ใช้หลักการลดแรงดันไฟฟ้า","ขณะสตาร์ทแบบสตาร์แต่ละเฟส แรงดันลดลงจากพิกัดประมาณ 1.7 เท่า","ต้องใช้กับมอเตอร์ที่มีขดลวดสามเฟส 2 ชุด เพื่อต่อสตาร์ 1 ชุด และ เดลต้า 1 ชุด"], ans:4 },
+  { id:340, text:"ข้อใดไม่ใช่วิธีการเริ่มหมุนของมอเตอร์เหนี่ยวนำสามเฟสแบบบวาวนโรเตอร์ (wound rotor induction motor)", opts:["ต่อความต้านทานภายนอกกับวงจรโรเตอร์เฉพาะตอนเริ่มหมุน","ปรับความต้านทานโรเตอร์ให้ต่ำสุดในตอนเริ่มหมุน","ลัดวงจรความต้านทานภายนอกขณะมอเตอร์หมุนตามปกติ","เมื่อมอเตอร์เริ่มหมุน ค่อย ๆ ลดความต้านทานภายนอกลงจนเป็นศูนย์"], ans:2 },
+  { id:341, text:"ขณะสตาร์ทมอเตอร์แบบกรงกระรอก 2 ชั้น (double squirrel cage) กระแสสตาร์ทส่วนใหญ่ไหลในแท่งตัวนำด้านนอก (outer bar) หรือด้านใน (inner bar) เพราะเหตุใด", opts:["แท่งตัวนำด้านนอก เพราะค่าอิมพีแดนช์ขณะสตาร์ทต่ำกว่า","แท่งตัวนำด้านใน เพราะค่าอิมพีแดนช์ขณะสตาร์ทต่ำกว่า","แท่งตัวนำด้านใน เพราะค่าความต้านทานขดลวดขณะสตาร์ทต่ำกว่า","ไหลเท่ากัน เพราะทั้งสองต่อขนานกันอยู่"], ans:1 },
+  { id:342, text:"การสตาร์ทมอเตอร์เหนี่ยวนำสามเฟสโดยลดแรงดันจาก 380V เป็น 220V ด้วยหม้อแปลงอัตโนมัติ ให้ผลเหมือนกับการสตาร์ทด้วยวิธีใด", opts:["การสตาร์ทแบบ Direct on line ด้วยแรงดัน 380 V","สตาร์ทโดยใช้ตัวต้านทานอนุกรมในวงจร","สตาร์ทโดยใช้ขดลวดอนุกรมในวงจร","การสตาร์ทแบบสตาร์-เดลต้า"], ans:4 },
+  { id:344, text:"ข้อใดเป็นลักษณะของมอเตอร์เหนี่ยวนำสามเฟส แบบ Wound rotor", opts:["ให้แรงบิดต่ำกว่ามอเตอร์เหนี่ยวนำแบบ Squirrel cage rotor","ต้องมีความต้านทานภายนอกต่อที่ขดลวดสเตเตอร์ขณะสตาร์ท","ไม่ต้องใช้ความต้านทานภายนอกขณะสตาร์ท","ต้องมีความต้านทานภายนอกต่อที่ขดลวดโรเตอร์ขณะสตาร์ท"], ans:4 },
+  { id:345, text:"การกระทำแบบใดที่มีผลทำให้กระแสไฟฟ้าที่ไหลเข้ามอเตอร์เหนี่ยวนำมีค่าสูงที่สุด", opts:["การสตาร์ทมอเตอร์แบบต่อไฟเข้าโดยตรง (Direct on line starting)","การกลับทางหมุนมอเตอร์ในทันทีโดยการสลับสายไฟดคู่หนึ่ง","การที่มอเตอร์จ่ายโหลดเต็มพิกัด","การสตาร์ทโดยใช้ชุดสตาร์ทแบบสตาร์-เดลต้า"], ans:2 },
+  { id:348, text:"ข้อใดไม่ใช่วิธีการสตาร์ทมอเตอร์ซิงโครนัสสามเฟส", opts:["Synchronization starting","Induction starting","Reduced frequency starting","ไม่มีข้อใดผิด"], ans:4 },
+  { id:349, text:"มอเตอร์ซิงโครนัสที่ใช้เครื่องต้นกำลังช่วยหมุนขณะสตาร์ท การปลดเครื่องต้นกำลังออกสามารถทำได้เมื่อใด", opts:["เมื่อป้อนกระแสสร้างสนามแม่เหล็กเข้าที่โรเตอร์แล้ว","เมื่อโรเตอร์หมุนด้วยความเร็วพิกัดแล้ว","เมื่อต่อตัวขั้วแรงดันที่สเตเตอร์เข้ากับระบบไฟฟ้าเรียบร้อยแล้ว","เมื่อมอเตอร์อยู่ในสภาวะ steady state"], ans:3 },
+  { id:350, text:"Amortisseur winding หรือ Damper winding ในมอเตอร์ซิงโครนัส คืออะไร", opts:["ขดลวดอาร์มาเจอร์ใช้สร้างแรงเคลื่อนแม่เหล็กไฟฟ้า","ขดลวดสร้างสนามแม่เหล็กสำหรับสร้างแม่เหล็ก","ขดลวดกรงกระรอกสำหรับช่วยในการเริ่มหมุน","ขดลวดชดเชยสำหรับแก้การเกิด Armature reaction"], ans:3 },
+  { id:351, text:"เมื่อจ่ายแรงดันไฟฟ้าที่พิกัดให้มอเตอร์ซิงโครนัส จะเกิดอะไรขึ้น", opts:["มอเตอร์ออกตัวหมุนตามปกติ","มอเตอร์ออกตัวไม่ดีแต่ก็หมุนได้ตามปกติในที่สุด","มอเตอร์ไม่หมุนเพราะแรงดันไฟฟ้าน้อยเกินไป","มอเตอร์ไม่หมุน เพราะขั้วแม่เหล็กของโรเตอร์เกาะสนามแม่เหล็กหมุนไม่ทัน"], ans:4 },
+  { id:352, text:"ข้อใดต่อไปนี้ถูกต้อง (เกี่ยวกับการสตาร์ทมอเตอร์ซิงโครนัส)", opts:["การสตาร์ทมอเตอร์ซิงโครนัส ทำได้เพียง 2 วิธี คือ ใช้ Damper winding และ ตัวต้นกำลังขับจากภายนอก","การเพิ่มขดลวดพิเศษที่หน้าโพลของโรเตอร์ จะทำให้ลดเสียงรบกวนของมอเตอร์ซิงโครนัสลงแต่ยังยอมรับได้","ถ้ามอเตอร์ซิงโครนัสทำหน้าที่เป็นเครื่องกำเนิดอยู่ จะไม่สามารถกลับมาทำงานเป็นซิงโครนัสมอเตอร์ได้ในทันที","มอเตอร์ซิงโครนัส แบบที่มีขดลวดพิเศษฝังที่หน้าโพลของโรเตอร์ ทำหน้าที่คล้ายโรเตอร์แบบกรงกระรอก เรียกว่า Damper winding"], ans:1 },
+  { id:353, text:"ในขณะสตาร์ทมอเตอร์ซิงโครนัส โดยอาศัย Damper winding ต้องลัดวงจรขดลวดสร้างสนามเพื่อป้องกันเหตุการณ์ใด", opts:["แรงดันเกินในวงจรอาร์มาเจอร์","กระแสเกินในวงจรอาร์มาเจอร์","แรงดันเกินในวงจรขดลวดสร้างสนาม","กระแสเกินในวงจรขดลวดสร้างสนาม"], ans:3 },
+  { id:354, text:"ข้อใดเป็นวิธีการสตาร์ท (starting method) ของมอเตอร์ซิงโครนัส (synchronous motor)", opts:["สตาร์ทด้วยแรงดันไฟฟ้ากระแสตรง","สตาร์ทโดยใช้วิธีเดียวกับมอเตอร์เหนี่ยวนำ","สตาร์ทโดยการ Synchronization แล้วตัด Prime mover ออก","สตาร์ทด้วยขดลวดพิเศษ"], ans:3 },
+  { id:355, text:"ขณะเมื่อมอเตอร์ซิงโครนัสต่อกับ Infinite bus แล้ว การเปลี่ยนแปลงกระแสสร้างสนามแม่เหล็กจะทำให้", opts:["ต้องการกำลังไฟฟ้าเพิ่มขึ้น เมื่อเพิ่มกระแสสร้างสนามแม่เหล็ก","ต้องการกำลังไฟฟ้าลดลง เมื่อลดกระแสสร้างสนามแม่เหล็ก","ตัวประกอบกำลังไฟฟ้าล้าหลัง เมื่อเพิ่มกระแสสร้างสนามแม่เหล็ก","ตัวประกอบกำลังไฟฟ้านำหน้า (PF lead) เมื่อเพิ่มกระแสสร้างสนามแม่เหล็ก"], ans:4 },
+  { id:357, text:"ข้อใดต่อไปนี้ไม่ใช่ผลของการเพิ่มความถี่ไฟฟ้าสำหรับมอเตอร์เหนี่ยวนำสามเฟส", opts:["ความเร็วรอบของมอเตอร์ขณะไม่มีภาระ (no load speed) สูงขึ้น","แรงบิดสูงสุดของมอเตอร์เพิ่มขึ้น","ที่สลิปเดียวกัน เมื่อความถี่ไฟเพิ่มขึ้น ความเร็วรอบของมอเตอร์จะสูงขึ้น","ความเร็วรอบที่จุดแรงบิดสูงสุดเพิ่มขึ้น"], ans:2 },
+  { id:358, text:"ข้อใดไม่ใช่วิธีการควบคุมความเร็วรอบของมอเตอร์เหนี่ยวนำสามเฟส", opts:["การปรับความถี่ของแรงดันไฟฟ้าที่จ่ายให้กับขดลวดสเตเตอร์","การเปลี่ยนจำนวนขั้วแม่เหล็กของมอเตอร์","การเพิ่มค่าความต้านทานไฟฟ้าภายนอกที่โรเตอร์สำหรับโรเตอร์แบบพันขดลวด","การเปลี่ยนรูปแบบการต่อขดลวดสามเฟสที่สเตเตอร์ (เปลี่ยนจาก star เป็น delta หรือกลับกัน)"], ans:4 },
+  { id:359, text:"ตัวเลือกใดกล่าวเกี่ยวกับการควบคุมความเร็วรอบของมอเตอร์เหนี่ยวนำสามเฟสไม่ถูกต้อง", opts:["การเปลี่ยนจำนวนขั้วแม่เหล็กเป็นการปรับความเร็วรอบที่สามารถปรับได้อย่างละเอียดที่สุด","การควบคุมความเร็วรอบโดยการปรับความถี่ไฟ เมื่อต้องการให้เส้นแรงแม่เหล็กมีค่าคงที่ ต้องรักษาอัตราส่วน V/f ให้คงที่ด้วย","การปรับค่าแรงดันไฟฟ้าป้อนเข้าเป็นวิธีการปรับความเร็วรอบของมอเตอร์เหนี่ยวนำบางวิธีหนึ่ง","การเปลี่ยนจำนวนขั้วเป็นการปรับค่าความถี่ทางด้านไฟฟ้าป้อนเข้าที่สเตเตอร์"], ans:1 },
+  { id:360, text:"ตัวเลือกใดกล่าวเกี่ยวกับการควบคุมความเร็วรอบของมอเตอร์เหนี่ยวนำสามเฟสไม่ถูกต้อง", opts:["มอเตอร์เหนี่ยวนำที่สามารถปรับค่าความเร็วรอบขณะใช้งานโดยใช้การเปลี่ยนขั้วแม่เหล็กมีราคาแพง","การเปลี่ยนความเร็วรอบโดยการเปลี่ยนขั้วแม่เหล็กเหมาะกับงานที่ไม่ต้องการปรับความเร็วอย่างละเอียด","การควบคุมความเร็วรอบของมอเตอร์เหนี่ยวนำสามารถทำได้โดยการปรับความถี่ และจำนวนขั้วแม่เหล็กเท่านั้น","มอเตอร์ไฟฟ้าขณะใช้งานที่ความถี่ 50 Hz เมื่อปรับขั้วแม่เหล็กเป็น 2, 4 และ 6 ขั้ว ทำให้ synchronous speed เป็น 3000, 1500 และ 1000 rpm ตามลำดับ"], ans:3 },
+  { id:361, text:"ในการควบคุมความเร็วมอเตอร์เหนี่ยวนำสามเฟสด้วยความถี่ไฟต่ำ เพื่อให้ความเร็วลดลงต่ำกว่าพิกัด จะต้องทำสิ่งใดด้วยประกอบ", opts:["ลดปริมาณกระแสสร้างสนาม","ลดขนาดแรงดันไฟฟ้าที่จ่ายให้กับมอเตอร์ลง","เพิ่มขนาดแรงดันไฟฟ้าที่จ่ายให้กับมอเตอร์ขึ้น","ลดปริมาณภาระทางกลลง"], ans:2 },
+  { id:362, text:"ข้อใดกล่าวถึงการปรับความเร็วรอบของมอเตอร์เหนี่ยวนำสามเฟสโดยการเปลี่ยนจำนวนขั้วแม่เหล็กไม่ถูกต้อง", opts:["วิธีดังกล่าวเกิดจากการเปลี่ยนแปลงการต่อของขดลวดสเตเตอร์","วิธีดังกล่าวเหมาะสมกับมอเตอร์เหนี่ยวนำชนิด Wound rotor","วิธีดังกล่าวสามารถปรับความเร็วรอบได้อย่างต่อเนื่อง","ไม่มีข้อใดกล่าวไม่ถูกต้อง"], ans:2 },
+  { id:365, text:"มอเตอร์เหนี่ยวนำสามเฟส สามารถควบคุมความเร็วได้โดยวิธีใด", opts:["การเปลี่ยนแปลงจำนวนเส้นแรงแม่เหล็ก","การเปลี่ยนแปลงจำนวนขั้วแม่เหล็ก","การเปลี่ยนแปลงความถี่แรงดันไฟฟ้าจ่ายให้มอเตอร์","มีคำตอบถูกมากกว่า 1 ข้อ"], ans:4 },
+  { id:367, text:"วิธีการใดที่ไม่ใช้ในการควบคุมความเร็วรอบของมอเตอร์เหนี่ยวนำสามเฟส", opts:["การปรับแรงดันไฟฟ้าที่ขั้วสาย","การปรับความถี่ของแหล่งจ่ายแรงดันไฟฟ้า","การเปลี่ยนลำดับเฟส","การปรับค่าความต้านทานของวงจรโรเตอร์"], ans:3 },
+  { id:372, text:"มอเตอร์เหนี่ยวนำสามเฟสใช้ขดลวดที่มีฉนวนชนิด B (insulation class B) อุณหภูมิสูงสุดที่ยอมรับได้มีค่าเท่าใด", opts:["105 degree Celsius","120 degree Celsius","130 degree Celsius","155 degree Celsius"], ans:3 },
+  { id:373, text:"มอเตอร์เหนี่ยวนำ ใช้ขดลวดที่มีฉนวนชนิด F (Insulation class F) อุณหภูมิสูงสุดที่ยอมรับได้มีค่าเท่าใด", opts:["105 degree Celsius","120 degree Celsius","130 degree Celsius","155 degree Celsius"], ans:4 },
+  { id:374, text:"การออกแบบอุปกรณ์ป้องกันโหลดเกิน (over load) เพื่อป้องกันมอเตอร์ ควรออกแบบให้มีค่าเป็นกี่เปอร์เซ็นต์ของพิกัดกระแสไฟฟ้าของมอเตอร์", opts:["125 %","150 %","175 %","200 %"], ans:1 },
+  { id:375, text:"อุปกรณ์ใดต่อไปนี้ ไม่ใช่อุปกรณ์ที่ใช้สำหรับป้องกันมอเตอร์", opts:["Circuit breaker","Overload relay","Fuse","Bearing"], ans:4 },
+  { id:376, text:"ข้อใดเป็นสาเหตุที่ทำให้มอเตอร์เกิดความเสียหายได้", opts:["อุณหภูมิสูงเกินพิกัด","แรงดันไฟฟ้าสูงเกินพิกัด","ความเร็วรอบสูงเกินพิกัด","มีคำตอบมากกว่า 1 ข้อ"], ans:4 },
+  { id:377, text:"ค่าระดับการป้องกัน (index of protection: IP) ของมอเตอร์แสดงถึงอะไร", opts:["มาตรฐานการจับยึดมอเตอร์","มาตรฐานการระบายความร้อน","มาตรฐานการป้องกันเปลือกหุ้มมอเตอร์","มาตรฐานการตรวจจับการสั่นสะเทือนของมอเตอร์"], ans:3 },
+  { id:378, text:"ค่าระดับการป้องกัน IP XY โดยที่ X และ Y เป็นตัวเลข ค่า X แสดงถึงการป้องกันสิ่งใด", opts:["น้ำ","ของแข็ง","ไฟฟ้า","ความร้อน"], ans:2 },
+  { id:379, text:"ค่าระดับการป้องกัน IP XY โดยที่ X และ Y เป็นตัวเลข ค่า Y แสดงถึงการป้องกันสิ่งใด", opts:["น้ำ","ของแข็ง","ไฟฟ้า","ความร้อน"], ans:1 },
+  { id:380, text:"ค่าระดับการป้องกัน IP 55 ทั้งสองตัวแสดงถึงอะไร", opts:["ป้องกันวัตถุของแข็ง >12 mm และน้ำสเปรย์ที่ตกลงมาในแนวดิ่ง","ป้องกันวัตถุของแข็ง >1 mm และน้ำสาดจากทุกทิศทาง","ป้องกันอันตรายจากฝุ่น และน้ำฉีดจากปลายกระบอกที่ไม่แรงมากนัก","ป้องกันฝุ่นได้อย่างสมบูรณ์ และน้ำฉีดจากปลายกระบอกที่มีความแรงมาก"], ans:3 },
+  { id:381, text:"โครงสร้างส่วนใดในมอเตอร์กระแสตรงไม่จำเป็นต้องพิจารณาในเรื่องการป้องกัน", opts:["ไม่มีคำตอบที่ถูกต้อง","ขดลวดอาร์เมเจอร์","ขดลวดสนามแบบขนาน","ขดลวดสนามแบบอนุกรม"], ans:1 },
+  { id:382, text:"ข้อจำกัดของการปรับปรุงตัวประกอบกำลังไฟฟ้าของมอเตอร์ซิงโครนัสจะขึ้นอยู่กับสิ่งใด", opts:["ตัวประกอบกำลังไฟฟ้าจ่าย","แรงดันพิกัดของมอเตอร์","กระแสพิกัดของขดลวดอาร์เมเจอร์","กระแสพิกัดของขดลวดสนาม"], ans:4 },
+  { id:383, text:"มอเตอร์เหนี่ยวนำสามเฟสใช้ขดลวดฉนวนชนิด E (Insulation class E) อุณหภูมิสูงสุดที่ยอมรับได้มีค่าเท่าใด", opts:["105 degree Celsius","120 degree Celsius","130 degree Celsius","155 degree Celsius"], ans:2 },
+  { id:384, text:"การป้องกันมอเตอร์เหนี่ยวนำสามเฟสจากความผิดปกติของแรงดันไฟฟ้าป้อนเข้า ควรป้องกันความผิดปกติใด", opts:["Over voltage","Under voltage","Unbalance voltage","ถูกทุกข้อ"], ans:4 },
+  { id:385, text:"ความผิดปกติของแรงดันใดที่เป็นสาเหตุให้ต้องทำการตัดแหล่งจ่ายแรงดันไฟฟ้าให้กับมอเตอร์ทันที", opts:["Over voltage","Under voltage","Unbalance voltage","Phase failure"], ans:4 },
+  { id:386, text:"จากความผิดปกติของแรงดันไฟฟ้าป้อนเข้ามอเตอร์เหนี่ยวนำสามเฟส ข้อใดเป็นสาเหตุทำให้เกิดการสั่นสะเทือนอย่างต่อเนื่องที่ตัวมอเตอร์", opts:["Over voltage","Under voltage","Unbalance voltage","แรงดันไฟฟ้าไม่ส่งผลต่อการสั่นสะเทือนของมอเตอร์"], ans:3 }
+];
+
+let state = {
+  current: 0,
+  answers: new Array(QUESTIONS.length).fill(null),
+  revealed: new Array(QUESTIONS.length).fill(false)
+};
+
+function updateHeader() {
+  const answered = state.answers.filter(a => a !== null && a !== 0).length;
+  const correct = state.answers.filter((a,i) => a === QUESTIONS[i].ans).length;
+  const pct = answered > 0 ? Math.round(correct/answered*100) : 0;
+  document.getElementById('header-score').textContent = correct + ' / ' + answered;
+  document.getElementById('header-pct').textContent = 'คะแนน ' + (answered > 0 ? pct+'%' : '—%');
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[state.current];
+  const idx = state.current;
+  document.getElementById('q-num').textContent = 'ข้อที่ ' + (idx+1) + '/' + QUESTIONS.length + '  ·  ข้อ ' + q.id;
+  document.getElementById('q-text').textContent = q.text;
+  const optContainer = document.getElementById('options');
+  optContainer.innerHTML = '';
+  q.opts.forEach((opt, oi) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = '<span class="opt-label">' + (oi+1) + '</span><span class="opt-text">' + opt + '</span>';
+    btn.onclick = () => selectAnswer(oi+1);
+    if (state.revealed[idx]) {
+      btn.disabled = true;
+      if (oi+1 === q.ans) btn.classList.add('correct');
+      else if (oi+1 === state.answers[idx] && state.answers[idx] !== q.ans) btn.classList.add('wrong');
+    } else if (state.answers[idx] === oi+1) {
+      btn.classList.add('selected');
+    }
+    optContainer.appendChild(btn);
+  });
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner';
+  if (state.revealed[idx]) {
+    const isSkip = state.answers[idx] === 0;
+    const correct = !isSkip && state.answers[idx] === q.ans;
+    banner.classList.add('show', correct ? 'correct-banner' : 'wrong-banner');
+    document.getElementById('result-icon').textContent = isSkip ? '⏭' : (correct ? '✅' : '❌');
+    document.getElementById('result-msg').textContent = isSkip ? 'ข้ามข้อ' : (correct ? 'ถูกต้อง!' : 'ผิด!');
+    document.getElementById('result-ans').textContent = 'เฉลย: ข้อ ' + q.ans + ' — ' + q.opts[q.ans-1];
+  }
+  const done = state.answers.filter(a => a !== null).length;
+  const remain = QUESTIONS.length - done;
+  document.getElementById('prog-label').textContent = 'ข้อที่ ' + (idx+1) + ' / ' + QUESTIONS.length;
+  document.getElementById('prog-remain').textContent = remain > 0 ? 'ยังไม่ตอบ ' + remain + ' ข้อ' : '✓ ครบทุกข้อ';
+  document.getElementById('prog-fill').style.width = (done/QUESTIONS.length*100).toFixed(1) + '%';
+  document.getElementById('btn-prev').disabled = idx === 0;
+  document.getElementById('btn-next').disabled = !state.revealed[idx];
+  document.getElementById('btn-skip').style.display = state.revealed[idx] ? 'none' : '';
+  renderJumpGrid();
+  updateHeader();
+}
+
+function selectAnswer(choice) {
+  const idx = state.current;
+  if (state.revealed[idx]) return;
+  state.answers[idx] = choice;
+  state.revealed[idx] = true;
+  const q = QUESTIONS[idx];
+  const correct = choice === q.ans;
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner show ' + (correct ? 'correct-banner' : 'wrong-banner');
+  document.getElementById('result-icon').textContent = correct ? '✅' : '❌';
+  document.getElementById('result-msg').textContent = correct ? 'ถูกต้อง!' : 'ผิด!';
+  document.getElementById('result-ans').textContent = 'เฉลย: ข้อ ' + q.ans + ' — ' + q.opts[q.ans-1];
+  document.querySelectorAll('.option-btn').forEach((btn, oi) => {
+    btn.disabled = true;
+    if (oi+1 === q.ans) btn.classList.add('correct');
+    if (oi+1 === choice && choice !== q.ans) btn.classList.add('wrong');
+    btn.classList.remove('selected');
+  });
+  document.getElementById('btn-next').disabled = false;
+  document.getElementById('btn-skip').style.display = 'none';
+  renderJumpGrid();
+  updateHeader();
+}
+
+function nextQ() {
+  if (state.current < QUESTIONS.length - 1) { state.current++; renderQuestion(); }
+  else { showFinal(); }
+}
+function prevQ() { if (state.current > 0) { state.current--; renderQuestion(); } }
+function skipQ() {
+  const idx = state.current;
+  state.answers[idx] = 0;
+  state.revealed[idx] = true;
+  const q = QUESTIONS[idx];
+  const banner = document.getElementById('result-banner');
+  banner.className = 'result-banner show wrong-banner';
+  document.getElementById('result-icon').textContent = '⏭';
+  document.getElementById('result-msg').textContent = 'ข้ามข้อ';
+  document.getElementById('result-ans').textContent = 'เฉลย: ข้อ ' + q.ans + ' — ' + q.opts[q.ans-1];
+  document.querySelectorAll('.option-btn').forEach((btn, oi) => {
+    btn.disabled = true;
+    if (oi+1 === q.ans) btn.classList.add('correct');
+  });
+  document.getElementById('btn-next').disabled = false;
+  document.getElementById('btn-skip').style.display = 'none';
+  renderJumpGrid();
+  updateHeader();
+}
+
+function renderJumpGrid() {
+  const grid = document.getElementById('jump-grid');
+  grid.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'jump-btn';
+    btn.textContent = q.id;
+    btn.title = 'ข้อ ' + q.id;
+    if (i === state.current) btn.classList.add('current');
+    else if (state.answers[i] === 0) btn.classList.add('skipped');
+    else if (state.answers[i] !== null) {
+      btn.classList.add(state.answers[i] === q.ans ? 'answered-correct' : 'answered-wrong');
+    }
+    btn.onclick = () => { state.current = i; renderQuestion(); };
+    grid.appendChild(btn);
+  });
+}
+
+function jumpToInput() {
+  const val = parseInt(document.getElementById('jump-input').value);
+  if (val >= 1 && val <= QUESTIONS.length) { state.current = val-1; renderQuestion(); document.getElementById('jump-input').value = ''; }
+}
+document.getElementById('jump-input').addEventListener('keydown', e => { if(e.key==='Enter') jumpToInput(); });
+
+let jumpVisible = true;
+function toggleJump() {
+  jumpVisible = !jumpVisible;
+  document.getElementById('jump-section').style.display = jumpVisible ? '' : 'none';
+}
+
+function showFinal() {
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('final-screen').style.display = 'block';
+  const correct = state.answers.filter((a,i) => a === QUESTIONS[i].ans).length;
+  const wrong = state.answers.filter((a,i) => a !== null && a !== 0 && a !== QUESTIONS[i].ans).length;
+  const skipped = state.answers.filter(a => a === 0 || a === null).length;
+  const answered = state.answers.filter(a => a !== null && a !== 0).length;
+  const pct = answered > 0 ? Math.round(correct/answered*100) : 0;
+  document.getElementById('final-score-val').textContent = pct + '%';
+  document.getElementById('final-score-label').textContent = correct + ' / ' + answered + ' ข้อถูกต้อง';
+  document.getElementById('stat-correct').textContent = correct;
+  document.getElementById('stat-wrong').textContent = wrong;
+  document.getElementById('stat-skip').textContent = skipped;
+}
+
+function restartQuiz() {
+  state = { current: 0, answers: new Array(QUESTIONS.length).fill(null), revealed: new Array(QUESTIONS.length).fill(false) };
+  document.getElementById('quiz-area').style.display = '';
+  document.getElementById('final-screen').style.display = 'none';
+  renderQuestion();
+}
+
+function reviewQuiz() {
+  state.current = 0;
+  document.getElementById('quiz-area').style.display = '';
+  document.getElementById('final-screen').style.display = 'none';
+  renderQuestion();
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
